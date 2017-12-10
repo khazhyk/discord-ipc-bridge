@@ -2,6 +2,7 @@
 
 extern crate winapi;
 extern crate kernel32;
+extern crate windows_named_pipe;
 
 use std::ffi::CStr;
 use std::os::windows::io::FromRawHandle;
@@ -10,6 +11,9 @@ use self::winapi::PROCESSENTRY32;
 
 pub const WINDOWS_PIPE_ADDR: &str = "//./pipe/discord-ipc-0";
 
+pub fn connect() -> ::std::io::Result<windows_named_pipe::PipeStream> {
+    windows_named_pipe::PipeStream::connect(WINDOWS_PIPE_ADDR)
+}
 
 pub fn pid_by_name<S: Into<String>>(name_query: S) -> Result<u32, u32> {
     let name_query = name_query.into();
