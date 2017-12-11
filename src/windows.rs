@@ -5,17 +5,20 @@ extern crate kernel32;
 extern crate windows_named_pipe;
 
 use std::ffi::CStr;
-use std::os::windows::io::FromRawHandle;
-use std::os::windows::io::AsRawHandle;
+use std::os::windows::io::{AsRawHandle, FromRawHandle};
 use self::winapi::PROCESSENTRY32;
-use std::io::Result;
-use std::io::Error;
-use std::io::ErrorKind;
+use std::io::{Error, ErrorKind, Result};
+
+pub use self::windows_named_pipe::PipeStream as RawConn;
+use discord_ipc;
+
 
 pub const WINDOWS_PIPE_ADDR: &str = "//./pipe/discord-ipc-0";
 
-pub fn connect() -> Result<windows_named_pipe::PipeStream> {
-    windows_named_pipe::PipeStream::connect(WINDOWS_PIPE_ADDR)
+impl discord_ipc::Connectable<RawConn> for RawConn {
+    fn raw_connect() -> Result<RawConn> {
+        RawConn::connect(WINDOWS_PIPE_ADDR)
+    }
 }
 
 pub fn pid_by_name<S: Into<String>>(name_query: S) -> Result<u32> {

@@ -24,16 +24,7 @@ use windows as util;
 
 
 fn main() {
-    let mut connection = util::connect().unwrap();
-
-    write_frame(
-        &mut connection,
-        serde_json::to_string(&Handshake {
-            v: 1,
-            client_id: "387837135568502785".to_string(),
-        }).unwrap(),
-        Opcode::Handshake,
-    );
+    let mut connection = util::RawConn::ipc_connect("387837135568502785").unwrap();
 
     let time = time::now().to_timespec().sec;
 
@@ -43,7 +34,7 @@ fn main() {
             .cmd("SET_ACTIVITY")
             .args(
                 PresenceArgs::builder()
-                    .pid(util::pid_by_name("sublime_text.exe").unwrap() as i32)
+                    .pid(util::pid_by_name("chrome.exe").unwrap() as i32)
                     .activity(
                         Activity::builder()
                             .state("looking at memes".to_string())
@@ -58,7 +49,7 @@ fn main() {
             )
             .build()).unwrap();
 
-        write_frame(&mut connection, memes, Opcode::Frame);
+        connection.write_frame(memes, Opcode::Frame).unwrap();
         std::thread::sleep(std::time::Duration::new(10, 0));
     }
 }

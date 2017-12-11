@@ -2,6 +2,9 @@ pub const MAX_RPC_FRAME_SIZE: usize = 64 * 1024;
 pub const MAX_RPC_CONTENT_SIZE: usize = MAX_RPC_FRAME_SIZE -
     ::std::mem::size_of::<MessageFrameHeader>();
 
+use serde_json;
+use std::io::Result as IOResult;
+use std::io::{Error, ErrorKind};
 
 #[derive(Serialize, Deserialize)]
 #[repr(u32)]
@@ -93,23 +96,63 @@ pub struct Secrets {
     pub spectate: Option<String>,
 }
 
-pub fn write_frame<S: Into<String>>(stream: &mut (::std::io::Write), content: S, opcode: Opcode) {
-    let content = content.into();
-    println!("{}", &content);
-    let content_bytes = content.as_bytes();
-    let header = MessageFrameHeader {
-        opcode: opcode,
-        length: content_bytes.len() as u32,
-    };
-    stream
-        .write_all(
-            ::bincode::serialize(
-                &header,
-                ::bincode::Bounded(::std::mem::size_of::<MessageFrameHeader>() as u64),
-            ).unwrap()
-                .as_slice(),
-        )
-        .unwrap();
-    stream.write_all(content_bytes).unwrap();
-    stream.flush().unwrap();
+pub trait Connectable<C> {
+    fn raw_connect() -> IOResult<C>;
+}
+
+pub trait RawIpcConnection<T>
+    : ::std::io::Read + ::std::io::Write + Connectable<T> {
+    fn write_frame<S: Into<String>>(&mut self, content: S, opcode: Opcode)
+        -> ::std::io::Result<()>;
+    fn ipc_connect<S: Into<String>>(client_id: S) -> IOResult<T>;
+}
+
+impl<T> RawIpcConnection<T> for T
+where
+    T: ::std::io::Read + ::std::io::Write + Connectable<T>,
+{
+    fn write_frame<S: Into<String>>(
+        &mut self,
+        content: S,
+        opcode: Opcode,
+    ) -> ::std::io::Result<()> {
+        let content = content.into();
+        println!("{}", &content);
+        let content_bytes = content.as_bytes();
+        if content_bytes.len() > MAX_RPC_CONTENT_SIZE {
+            return Err(Error::new(ErrorKind::Other, "Message too large"));
+        }
+        let header = MessageFrameHeader {
+            opcode: opcode,
+            length: content_bytes.len() as u32,
+        };
+        try!(
+            self.write_all(
+                ::bincode::serialize(
+                    &header,
+                    ::bincode::Bounded(::std::mem::size_of::<MessageFrameHeader>() as u64),
+                ).unwrap()
+                    .as_slice(),
+            )
+        );
+        try!(self.write_all(content_bytes));
+        try!(self.flush());
+        Ok(())
+    }
+
+    fn ipc_connect<S: Into<String>>(client_id: S) -> IOResult<T> {
+        let mut conn = try!(Self::raw_connect());
+        let client_id = client_id.into();
+        try!(
+            conn.write_frame(
+                serde_json::to_string(&Handshake {
+                    v: 1,
+                    client_id: client_id.clone(),
+                }).unwrap(),
+                Opcode::Handshake,
+            )
+        );
+
+        Ok(conn)
+    }
 }
