@@ -152,7 +152,6 @@ where
                 Opcode::Handshake,
             )
         );
-
         Ok(conn)
     }
 }

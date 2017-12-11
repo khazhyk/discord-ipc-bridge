@@ -3,17 +3,17 @@
 mod discord_ipc;
 mod ws_server;
 
-#[macro_use]
-extern crate serde_derive;
+#[macro_use] extern crate serde_derive;
+#[macro_use] extern crate mac;
+#[macro_use] extern crate builder;
+#[macro_use] extern crate lazy_static;
 extern crate serde;
 extern crate libc;
 extern crate serde_json;
 extern crate bincode;
 extern crate rand;
 extern crate time;
-
-#[macro_use]
-extern crate builder;
+extern crate regex;
 
 use discord_ipc::*;
 
@@ -22,6 +22,14 @@ mod windows;
 #[cfg(windows)]
 use windows as util;
 
+#[cfg(target_os="macos")]
+mod macos;
+#[cfg(target_os="linux")]
+mod linux;
+#[cfg(unix)]
+mod unix;
+#[cfg(unix)]
+use unix as util;
 
 fn main() {
     let mut connection = util::RawConn::ipc_connect("387837135568502785").unwrap();
@@ -34,7 +42,7 @@ fn main() {
             .cmd("SET_ACTIVITY")
             .args(
                 PresenceArgs::builder()
-                    .pid(util::pid_by_name("chrome.exe").unwrap() as i32)
+                    .pid(util::pid_by_name(util::CHROME_NAME).unwrap())
                     .activity(
                         Activity::builder()
                             .state("looking at memes".to_string())
@@ -50,6 +58,7 @@ fn main() {
             .build()).unwrap();
 
         connection.write_frame(memes, Opcode::Frame).unwrap();
+
         std::thread::sleep(std::time::Duration::new(10, 0));
     }
 }

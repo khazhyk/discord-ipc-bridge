@@ -1,5 +1,3 @@
-#[cfg(windows)]
-
 extern crate winapi;
 extern crate kernel32;
 extern crate windows_named_pipe;
@@ -13,6 +11,7 @@ pub use self::windows_named_pipe::PipeStream as RawConn;
 use discord_ipc;
 
 
+pub const CHROME_NAME : &str = "chrome.exe";
 pub const WINDOWS_PIPE_ADDR: &str = "//./pipe/discord-ipc-0";
 
 impl discord_ipc::Connectable<RawConn> for RawConn {
@@ -21,7 +20,7 @@ impl discord_ipc::Connectable<RawConn> for RawConn {
     }
 }
 
-pub fn pid_by_name<S: Into<String>>(name_query: S) -> Result<u32> {
+pub fn pid_by_name<S: Into<String>>(name_query: S) -> Result<i32> {
     let name_query = name_query.into();
     let handle: winapi::winnt::HANDLE =
         unsafe { kernel32::CreateToolhelp32Snapshot(winapi::TH32CS_SNAPPROCESS, 0) };
@@ -43,7 +42,7 @@ pub fn pid_by_name<S: Into<String>>(name_query: S) -> Result<u32> {
         let name = unsafe { CStr::from_ptr(proc_ent.szExeFile.as_ptr()) };
 
         if name_query == name.to_str().unwrap() {
-            return Ok(proc_ent.th32ProcessID);
+            return Ok(proc_ent.th32ProcessID as i32);
         }
     }
 

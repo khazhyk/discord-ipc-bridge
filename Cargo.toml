@@ -11,10 +11,20 @@ serde_json = "1.0.7"
 libc = "0.2"
 rand = "0.3"
 serde_derive = "1.0.23"
-windows-named-pipe = "0.1.0"
 bincode = "0.9.2"
 time = "0.1.38"
-winapi = "0.2.8"
-kernel32-sys = "0.2.2"
 derive_builder = "0.5.0"
 builder = { path = "builder" }
+mac = "0.1.1"
+
+[target.'cfg(windows)'.dependencies]
+winapi = "0.2.8"
+kernel32-sys = "0.2.2"
+windows-named-pipe = "0.1.0"
+
+[target.'cfg(target_os="linux")'.dependencies]
+psutil = "1.1.0"
+
+[target.'cfg(target_os="macos")'.dependencies]
+regex = "0.2"
+lazy_static = "1.0.0"
