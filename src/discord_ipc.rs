@@ -25,20 +25,20 @@ pub struct Handshake {
     pub client_id: String,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Default, DefaultBuilder)]
 pub struct Presence {
     pub nonce: String,
     pub cmd: String,
     pub args: PresenceArgs,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Default, DefaultBuilder)]
 pub struct PresenceArgs {
     pub pid: i32,
     pub activity: Activity,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Default, DefaultBuilder)]
 pub struct Activity {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub state: Option<String>,
@@ -55,7 +55,7 @@ pub struct Activity {
     pub instance: bool,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Default, DefaultBuilder)]
 pub struct Timestamps {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub start: Option<i64>,
@@ -63,7 +63,7 @@ pub struct Timestamps {
     pub end: Option<i64>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Default, DefaultBuilder)]
 pub struct Assets {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub large_image: Option<String>,
@@ -75,7 +75,7 @@ pub struct Assets {
     pub small_text: Option<String>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Default, DefaultBuilder)]
 pub struct Party {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
@@ -83,7 +83,7 @@ pub struct Party {
     pub size: Option<Vec<i32>>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Default, DefaultBuilder)]
 pub struct Secrets {
     #[serde(rename = "match", skip_serializing_if = "Option::is_none")]
     pub _match: Option<String>,
@@ -110,7 +110,6 @@ pub fn write_frame<S: Into<String>>(stream: &mut (::std::io::Write), content: S,
                 .as_slice(),
         )
         .unwrap();
-    // TODO : check content length
     stream.write_all(content_bytes).unwrap();
     stream.flush().unwrap();
 }

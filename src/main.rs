@@ -1,7 +1,6 @@
 #![feature(const_size_of)]
 
-mod discord_rpc;
-mod windows;
+mod discord_ipc;
 mod ws_server;
 
 #[macro_use]
@@ -13,12 +12,19 @@ extern crate bincode;
 extern crate rand;
 extern crate time;
 
-use discord_rpc::*;
+#[macro_use]
+extern crate builder;
 
+use discord_ipc::*;
+
+#[cfg(windows)]
+mod windows;
+#[cfg(windows)]
+use windows as util;
 
 
 fn main() {
-    let mut connection = windows::connect().unwrap();
+    let mut connection = util::connect().unwrap();
 
     write_frame(
         &mut connection,
@@ -32,34 +38,27 @@ fn main() {
     let time = time::now().to_timespec().sec;
 
     loop {
-        discord_rpc::write_frame(
-            &mut connection,
-            serde_json::to_string(&Presence {
-                nonce: rand::random::<u64>().to_string(),
-                cmd: String::from("SET_ACTIVITY"),
-                args: PresenceArgs {
-                    pid: windows::pid_by_name("chrome.exe").unwrap() as i32,
-                    activity: Activity {
-                        state: Some(String::from("looking at memes")),
-                        details: Some(String::from("110% memes")),
-                        timestamps: Some(Timestamps {
-                            start: Some(time),
-                            end: None,
-                        }),
-                        assets: Some(Assets {
-                            large_image: Some(String::from("ayano-14")),
-                            large_text: None,
-                            small_image: None,
-                            small_text: None,
-                        }),
-                        party: None,
-                        secrets: None,
-                        instance: false,
-                    },
-                },
-            }).unwrap(),
-            Opcode::Frame,
-        );
+        let memes = serde_json::to_string(&Presence::builder()
+            .nonce(rand::random::<u64>().to_string())
+            .cmd("SET_ACTIVITY")
+            .args(
+                PresenceArgs::builder()
+                    .pid(util::pid_by_name("sublime_text.exe").unwrap() as i32)
+                    .activity(
+                        Activity::builder()
+                            .state("looking at memes".to_string())
+                            .details("110% memes".to_string())
+                            .timestamps(Timestamps::builder().start(time))
+                            .assets(
+                                Assets::builder()
+                                    .large_image("ayano-14".to_string())
+                                    .large_text("110% memes".to_string()),
+                            ),
+                    ),
+            )
+            .build()).unwrap();
+
+        write_frame(&mut connection, memes, Opcode::Frame);
         std::thread::sleep(std::time::Duration::new(10, 0));
     }
 }
