@@ -30,7 +30,7 @@ fn main() {
         &mut connection,
         serde_json::to_string(&Handshake {
             v: 1,
-            client_id: String::from("387837135568502785"),
+            client_id: "387837135568502785".to_string(),
         }).unwrap(),
         Opcode::Handshake,
     );
