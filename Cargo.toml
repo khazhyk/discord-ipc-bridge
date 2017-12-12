@@ -16,6 +16,7 @@ time = "0.1.38"
 derive_builder = "0.5.0"
 builder = { path = "builder" }
 mac = "0.1.1"
+lazy_static = "1.0.0"
 
 [target.'cfg(windows)'.dependencies]
 winapi = "0.2.8"
@@ -27,4 +28,3 @@ psutil = "1.1.0"
 
 [target.'cfg(target_os="macos")'.dependencies]
 regex = "0.2"
-lazy_static = "1.0.0"

@@ -3,17 +3,20 @@
 mod discord_ipc;
 mod ws_server;
 
-#[macro_use] extern crate serde_derive;
-#[macro_use] extern crate mac;
-#[macro_use] extern crate builder;
-#[macro_use] extern crate lazy_static;
+#[macro_use]
+extern crate serde_derive;
+#[macro_use]
+extern crate mac;
+#[macro_use]
+extern crate builder;
+#[macro_use]
+extern crate lazy_static;
 extern crate serde;
 extern crate libc;
 extern crate serde_json;
 extern crate bincode;
 extern crate rand;
 extern crate time;
-extern crate regex;
 
 use discord_ipc::*;
 
@@ -22,9 +25,9 @@ mod windows;
 #[cfg(windows)]
 use windows as util;
 
-#[cfg(target_os="macos")]
+#[cfg(target_os = "macos")]
 mod macos;
-#[cfg(target_os="linux")]
+#[cfg(target_os = "linux")]
 mod linux;
 #[cfg(unix)]
 mod unix;

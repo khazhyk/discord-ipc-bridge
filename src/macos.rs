@@ -1,15 +1,18 @@
 use std::io::{Error, ErrorKind, Result};
-
+extern crate regex;
 use regex::Regex;
 
-pub const CHROME_NAME : &str = "Google Chrome.app";
+pub const CHROME_NAME: &str = "Google Chrome.app";
 
 pub fn pid_by_name<S: Into<String>>(name_query: S) -> Result<i32> {
     let name_query = name_query.into();
 
-    let ps_res = ::std::process::Command::new("ps").arg("aux").output().unwrap();
-    let lines = unsafe {String::from_utf8_unchecked(ps_res.stdout)};
-    
+    let ps_res = ::std::process::Command::new("ps")
+        .arg("aux")
+        .output()
+        .unwrap();
+    let lines = unsafe { String::from_utf8_unchecked(ps_res.stdout) };
+
     for ref line in lines.split("\n") {
         if line.contains(&name_query) {
             lazy_static! {
