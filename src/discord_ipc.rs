@@ -55,7 +55,8 @@ pub struct Activity {
     pub party: Option<Party>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub secrets: Option<Secrets>,
-    pub instance: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub instance: Option<bool>,
 }
 
 #[derive(Serialize, Deserialize, Default, DefaultBuilder)]
@@ -104,6 +105,8 @@ pub trait RawIpcConnection<T>
     : ::std::io::Read + ::std::io::Write + Connectable<T> {
     fn write_frame<S: Into<String>>(&mut self, content: S, opcode: Opcode)
         -> ::std::io::Result<()>;
+    fn handshake<S: Into<String>>(&mut self, client_id: S) -> IOResult<()>;
+    fn rich_presence<P: Into<Presence>>(&mut self, presence: P) -> IOResult<()>;
     fn ipc_connect<S: Into<String>>(client_id: S) -> IOResult<T>;
 }
 
@@ -140,18 +143,29 @@ where
         Ok(())
     }
 
+    fn handshake<S: Into<String>>(&mut self, client_id: S) -> IOResult<()> {
+        let client_id = client_id.into();
+        self.write_frame(
+            serde_json::to_string(&Handshake {
+                v: 1,
+                client_id: client_id.clone(),
+            }).unwrap(),
+            Opcode::Handshake,
+        )
+
+    }
+
+    fn rich_presence<P: Into<Presence>>(&mut self, presence: P) -> IOResult<()> {
+        self.write_frame(
+            serde_json::to_string(&presence.into()).unwrap(),
+            Opcode::Frame,
+        )
+    }
+
     fn ipc_connect<S: Into<String>>(client_id: S) -> IOResult<T> {
         let mut conn = try!(Self::raw_connect());
         let client_id = client_id.into();
-        try!(
-            conn.write_frame(
-                serde_json::to_string(&Handshake {
-                    v: 1,
-                    client_id: client_id.clone(),
-                }).unwrap(),
-                Opcode::Handshake,
-            )
-        );
+        try!(conn.handshake(client_id));
         Ok(conn)
     }
 }

@@ -1,16 +1,16 @@
 #![feature(const_size_of)]
 
-mod discord_ipc;
-mod ws_server;
-
 #[macro_use]
 extern crate serde_derive;
 #[macro_use]
-extern crate mac;
-#[macro_use]
 extern crate builder;
+#[cfg(target_os = "macos")]
+#[macro_use]
+extern crate mac;
+#[cfg(target_os = "macos")]
 #[macro_use]
 extern crate lazy_static;
+
 extern crate serde;
 extern crate libc;
 extern crate serde_json;
@@ -24,7 +24,6 @@ use discord_ipc::*;
 mod windows;
 #[cfg(windows)]
 use windows as util;
-
 #[cfg(target_os = "macos")]
 mod macos;
 #[cfg(target_os = "linux")]
@@ -34,7 +33,11 @@ mod unix;
 #[cfg(unix)]
 use unix as util;
 
+mod discord_ipc;
+mod ws_server;
+
 fn main() {
+    ws_server::websocket_thread();
     let mut connection = util::RawConn::ipc_connect("387837135568502785").unwrap();
 
     let time = time::now().to_timespec().sec;
