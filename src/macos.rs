@@ -1,6 +1,6 @@
 use std::io::{Error, ErrorKind, Result};
 extern crate regex;
-use regex::Regex;
+use self::regex::Regex;
 
 pub const CHROME_NAME: &str = "Google Chrome.app";
 
